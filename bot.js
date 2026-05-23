@@ -4,10 +4,20 @@ const Keyword = require("./models/Keyword");
 const Welcome = require("./models/Welcome");
 const SeenUser = require("./models/SeenUser");
 
+// Puppeteer executable path for Render
+let executablePath;
+try {
+  const puppeteer = require("puppeteer");
+  executablePath = puppeteer.executablePath();
+} catch {
+  executablePath = undefined;
+}
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
+    executablePath,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -46,33 +56,24 @@ client.on("call", async (call) => {
 
 client.on("message", async (msg) => {
   try {
-    // Ignore group messages
     if (msg.from.includes("@g.us")) return;
-
-    // Ignore status messages
     if (msg.from === "status@broadcast") return;
-
-    // ❌ Media block karo (photo, video, audio, document)
     if (msg.type !== "chat") return;
 
     const senderNumber = msg.from;
     const incomingText = msg.body.trim().toLowerCase();
 
-    // Check if first time user
     const isSeenUser = await SeenUser.findOne({ phoneNumber: senderNumber });
 
     if (!isSeenUser) {
-      // First time — send welcome message
       const welcomeDoc = await Welcome.findOne({ isActive: true });
       if (welcomeDoc) {
         await msg.reply(welcomeDoc.message);
       }
-      // Mark as seen
       await SeenUser.create({ phoneNumber: senderNumber });
       return;
     }
 
-    // Returning user — check keyword match (exact match)
     const keywordDoc = await Keyword.findOne({
       keyword: incomingText,
       isActive: true,
@@ -81,7 +82,6 @@ client.on("message", async (msg) => {
     if (keywordDoc) {
       await msg.reply(keywordDoc.reply);
     }
-    // No match = no reply (silent)
   } catch (err) {
     console.error("Message handling error:", err.message);
   }
