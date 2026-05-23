@@ -4,20 +4,11 @@ const Keyword = require("./models/Keyword");
 const Welcome = require("./models/Welcome");
 const SeenUser = require("./models/SeenUser");
 
-// Puppeteer executable path for Render
-let executablePath;
-try {
-  const puppeteer = require("puppeteer");
-  executablePath = puppeteer.executablePath();
-} catch {
-  executablePath = undefined;
-}
-
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath,
+    executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome-stable",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -48,7 +39,6 @@ client.on("disconnected", (reason) => {
   console.log("⚠️ Bot disconnected:", reason);
 });
 
-// ❌ Call reject karo
 client.on("call", async (call) => {
   await call.reject();
   console.log("📵 Call rejected from:", call.from);
