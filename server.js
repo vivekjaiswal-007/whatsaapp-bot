@@ -2,17 +2,23 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { execSync } = require("child_process");
 const { initBot } = require("./bot");
 const keywordRoutes = require("./routes/keywords");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+try {
+  const chromePath = execSync("find /opt/render/.cache/puppeteer -name 'chrome' -type f 2>/dev/null").toString().trim();
+  console.log("🔍 Chrome found at:", chromePath);
+} catch (e) {
+  console.log("⚠️ Chrome find error:", e.message);
+}
+
 app.use(cors());
 app.use(express.json());
 
-// Simple admin auth middleware
 app.use("/api", (req, res, next) => {
   const authHeader = req.headers["x-admin-key"];
   if (authHeader !== process.env.ADMIN_PASSWORD) {
@@ -21,15 +27,12 @@ app.use("/api", (req, res, next) => {
   next();
 });
 
-// Routes
 app.use("/api", keywordRoutes);
 
-// Health check
 app.get("/", (req, res) => {
   res.json({ status: "WhatsApp Bot running ✅" });
 });
 
-// Connect MongoDB then start server + bot
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -37,7 +40,6 @@ mongoose
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
     });
-    // Start WhatsApp bot
     initBot();
   })
   .catch((err) => {
