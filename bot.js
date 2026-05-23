@@ -4,14 +4,11 @@ const Keyword = require("./models/Keyword");
 const Welcome = require("./models/Welcome");
 const SeenUser = require("./models/SeenUser");
 
-// Use puppeteer's downloaded chrome
-const puppeteer = require("puppeteer");
-
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath: puppeteer.executablePath(),
+    executablePath: "/opt/render/.cache/puppeteer/chrome/linux-121.0.6167.85/chrome-linux64/chrome",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -44,7 +41,6 @@ client.on("disconnected", (reason) => {
 
 client.on("call", async (call) => {
   await call.reject();
-  console.log("📵 Call rejected from:", call.from);
 });
 
 client.on("message", async (msg) => {
