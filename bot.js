@@ -4,11 +4,14 @@ const Keyword = require("./models/Keyword");
 const Welcome = require("./models/Welcome");
 const SeenUser = require("./models/SeenUser");
 
+// Use puppeteer's downloaded chrome
+const puppeteer = require("puppeteer");
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome-stable",
+    executablePath: puppeteer.executablePath(),
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
